@@ -1,4 +1,5 @@
 import numpy as np
+import random
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 
@@ -25,16 +26,17 @@ def SquareLossfunction(X,y,theta, l2_reg=0.01):
     ## Y: n*1 matrix: n= number of data
     ## theta: 1* d matrix, d: number of feature
     ## loss =avg(X*thata.T-Y+ l2_reg*(L2norm(theta)))
+    m=X.shape[0]
     loss_term=np.mean(np.square((np.dot(X,theta)-y)))
-    #reg_term=np.linalg.norm(theta)
-    loss=loss_term
+    reg_term=np.linalg.norm(theta)*(2/m)
+    loss=loss_term+reg_term
     return loss
 def computegrad(X,y,theta,l2_reg=0.01):
     m=X.shape[0]
     temp=np.dot(X,theta)-y
-    grad_term=2.0*np.mean((np.dot(X.T,temp)))
+    grad_term=(2.0/m)*(np.dot(X.T,temp))
     return grad_term  
-def gradDescent(X,y,alpha=0.05,num_iter=1000): 
+def gradDescent(X,y,alpha=0.05,num_iter=1000,backtracking=True): 
     ## the very basic gradient descent..
     ##things to consider.. initialization of theta, iteration..
     feat_num=X.shape[1]
@@ -42,23 +44,72 @@ def gradDescent(X,y,alpha=0.05,num_iter=1000):
 
     theta_hist=np.zeros((num_iter+1,feat_num)) ## storing the historical data of theta
     loss_hist = np.zeros(num_iter+1) ## storing loss value to see if gradient is doing well..
-    
-    ## initialize theta with random number between 0 and 1
     theta_init=np.random.rand(feat_num)
     theta_hist[0,:]=theta_init
     loss_hist[0]=SquareLossfunction(X,y,theta_hist[0,:])
-    for i in range(0,num_iter):
-        cur_theta=theta_hist[i,:]
-        theta_hist[i+1,:]=cur_theta-alpha*computegrad(X,y,cur_theta)
-        loss_hist[i+1]=SquareLossfunction(X,y,theta_hist[i+1,:])
-    return theta_hist, loss_hist
+    bactracknum=0
+    ## initialize theta with random number between 0 and 1
+    if backtracking:
+        alp, beta=0.3,0.9
+        for i in range(0,num_iter):
+            cur_theta=theta_hist[i,:]
+            dx=-computegrad(X,y,cur_theta)
+            t=1
+            while True:
+            
+                n_loss=SquareLossfunction(X,y,cur_theta+t*dx)
+                o_loss=SquareLossfunction(X,y,cur_theta)-alp*np.dot(dx,dx)*t
+                if n_loss>o_loss:
+                    t=0.9*t
+                    bactracknum+=1
+                else:
+                    break
+            theta_hist[i+1]=cur_theta-t*computegrad(X,y,cur_theta)
+            loss_hist[i+1]=SquareLossfunction(X,y,theta_hist[i+1,:])
 
-def regularizedgradDescent(X,y,theta):
+    else:
+        for i in range(0,num_iter):
+            cur_theta=theta_hist[i,:]
+            theta_hist[i+1,:]=cur_theta-alpha*computegrad(X,y,cur_theta)
+            loss_hist[i+1]=SquareLossfunction(X,y,theta_hist[i+1,:])
+    return theta_hist, loss_hist,bactracknum
+
+def minibatchgradDescent(X,y,  batchsize=1,alpha=0.005, num_iter=100):
     ##things to Consider
     ## Batchsize, doing Bactracking or not ,iteration, epoch.. 
-    return 0
+    ## sequence 1. separating batches..
+    n=X.shape[0]
+    num_feat=X.shape[1]
+    if n%batchsize==0:
+        b_num=(int)(n/batchsize)
+    else: b_num=(int)(n/batchsize)+1
+    b_index=np.arange(0,b_num,1)
+    theta_hist=np.zeros((num_iter,b_num,num_feat)) ## storing the historical data of theta
+    loss_hist = np.zeros((num_iter,b_num)) ## storing loss value to see if gradient is doing well..
+    theta_init=np.random.rand(num_feat)
+    random.shuffle(b_index)
+    theta_hist[0,0,:]=theta_init
+    for j in range(num_iter):
+        for i,index in enumerate(b_index):
+            cur_theta=theta_hist[j,i,:]
+            if index==batchsize-1:
+                splitX=X[index*batchsize:n,:]
+                splity=y[index*batchsize:n]
+            else:
+                splitX=X[index*batchsize:(index+1)*batchsize,:]
+                splity=y[index*batchsize:(index+1)*batchsize]
+            if i+1<b_num:
+                theta_hist[j,i+1,:]=cur_theta-alpha*computegrad(splitX,splity,cur_theta)
+                loss_hist[j,i]=SquareLossfunction(X,y,cur_theta)
+            else :
+                if j+1==num_iter:
+                    return loss_hist
+                theta_hist[j+1,0,:]=cur_theta-alpha*computegrad(splitX,splity,cur_theta)
+                loss_hist[j+1,i]=SquareLossfunction(X,y,cur_theta)
+        random.shuffle(b_index)
 
 
 
+    return loss_hist
 
 
