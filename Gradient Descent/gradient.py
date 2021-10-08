@@ -107,13 +107,10 @@ def minibatchgradDescent(X,y,  batchsize=1,alpha=0.005, num_iter=100):
                 loss_hist[j,i]=SquareLossfunction(X,y,cur_theta)
             else :
                 if j+1==num_iter:
-                    return loss_hist
+                    return loss_hist,theta_hist
                 theta_hist[j+1,0,:]=cur_theta-alpha*computegrad(splitX,splity,cur_theta)
                 loss_hist[j+1,i]=SquareLossfunction(X,y,cur_theta)
         random.shuffle(b_index)
 
-
-
-    return loss_hist
-
+    return loss_hist, theta_hist
 

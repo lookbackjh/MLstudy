@@ -4,24 +4,21 @@ from gradient import *
 import pandas
 import csv
 ## Data Generation
-n=100
-X=np.hstack([np.ones((n,1)),np.random.rand(n,1)]) ### Design Matrix For X
-##print(X)
-theta=np.array([4,3])
-Y=np.dot(X,theta)+np.random.normal(0,1,n)
-#plt.scatter(X[:,1],Y)
-##scattered image of X and Y.. Now Lets do the optimization
-df=pandas.read_csv("data.csv")
 
-y=df['y']
-X=df.loc[:,df.columns!='y']
-X_train,X_test,y_train,y_test=splitData(X,y)
-X_train=featurescale(X_train)
-X_test=featurescale(X_test)
-theta_init=np.random.rand(X_train.shape[1])
-print(theta_init.shape)
-loss=SquareLossfunction(X_train,y_train,theta_init)
-print(loss)
-num_iter=150
-theta_hist,loss_hist=gradDescent(X_train,y_train,num_iter=num_iter)
-print(loss_hist)
+index=np.arange(0,101,1)
+N = 100
+theta = np.array([[1], [3]])
+X = np.c_[np.random.rand(N,1), np.ones((N,1))]
+y = np.dot(X,theta)+ 0.3*np.random.randn(N,1)
+true_theta = np.linalg.lstsq(X, y, rcond=None)[0]
+
+plt.legend()
+plt.scatter(X[:,0],y)
+y=np.squeeze(y)## making y from 2d to 1d
+g_theta_hist,g_loss_hist, _ =gradDescent(X,y,alpha=0.01,num_iter=50,backtracking=False)
+b_loss_hist,b_theta_hist = minibatchgradDescent(X,y,batchsize=1,alpha=0.01,num_iter=50) ##setting batchsize=1-> SGD
+
+index=np.arange(0,50,1)
+#plt.plot(index,g_loss_hist[0:50],label=r"$\alpha$={}".format(0.01))
+plt.plot(index,np.mean(b_loss_hist,axis=1),label=r"sgd")
+plt.legend()
