@@ -40,7 +40,7 @@ def computegrad(X,y,theta,l2_reg=0):
     grad_term=(2.0/m)*(np.dot(X.T,temp))
     reg_term=2*l2_reg*theta
     return grad_term +reg_term 
-def gradDescent(X,y,alpha=0.1,num_iter=1000,backtracking=True): 
+def gradDescent(X,y,alpha=0.1,num_iter=1000,backtracking=True, l2_reg=0.01): 
     ## the very basic gradient descent..
     ##things to consider.. initialization of theta, iteration..
     feat_num=X.shape[1]
@@ -74,8 +74,8 @@ def gradDescent(X,y,alpha=0.1,num_iter=1000,backtracking=True):
     else:
         for i in range(0,num_iter):
             cur_theta=theta_hist[i,:]
-            theta_hist[i+1,:]=cur_theta-alpha*computegrad(X,y,cur_theta)
-            loss_hist[i+1]=SquareLossfunction(X,y,theta_hist[i+1,:])
+            theta_hist[i+1,:]=cur_theta-alpha*computegrad(X,y,cur_theta,l2_reg)
+            loss_hist[i+1]=SquareLossfunction(X,y,theta_hist[i+1,:],l2_reg)
     return theta_hist, loss_hist,bactracknum
 
 def minibatchgradDescent(X,y,  batchsize=1,alpha=0.005, num_iter=100):
