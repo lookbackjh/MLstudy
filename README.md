@@ -1,6 +1,6 @@
 # MLstudy
-for studying basics of machine learning
-
+for studying basics of machine learning and Deep learning. 
+Deep learning or ML projects that i proceeded will be uploaded. 
 
 ## Gradient Descent 
     has functions that helps me to do spliting data, scaling the data, get the gradient, loss .. etc
